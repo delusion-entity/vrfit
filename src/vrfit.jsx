@@ -1,4 +1,17 @@
 import { useState, useEffect } from "react";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 const routine = {
@@ -76,6 +89,22 @@ export default function VRFitApp() {
     }
   };
 
+  const activityDates = Object.keys(activityLog);
+  const activityData = activityDates.map(date => 1);
+
+  const chartData = {
+    labels: activityDates,
+    datasets: [
+      {
+        label: 'Jours enregistrés',
+        data: activityData,
+        fill: false,
+        backgroundColor: 'rgb(75, 192, 192)',
+        borderColor: 'rgba(75, 192, 192, 0.2)',
+      },
+    ],
+  };
+
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", padding: 16 }}>
       <h1 style={{ fontSize: 24, fontWeight: "bold", textAlign: "center" }}>VR Fit Challenge</h1>
@@ -91,6 +120,11 @@ export default function VRFitApp() {
         <h2 style={{ fontSize: 20 }}>Exercice du jour ({today})</h2>
         <p style={{ fontSize: 18, fontWeight: "bold" }}>{todayExercise}</p>
         <button onClick={saveTodayActivity}>Sauvegarder</button>
+      </div>
+
+      <div style={{ marginBottom: 16, padding: 12, background: "#fff", borderRadius: 8 }}>
+        <h2 style={{ fontSize: 20 }}>Évolution des activités</h2>
+        <Line data={chartData} />
       </div>
 
       <div style={{ padding: 12, background: "#fff", borderRadius: 8 }}>

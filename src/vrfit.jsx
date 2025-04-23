@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 
 const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-const checklist = ["Muscu", "VR", "Snack Protéine", "Gainage", "Équilibre VR", "Repos", "Poirier (mur)"];
+const routine = {
+  "Lundi": "Musculation bras + abdos (5x pompes, 3x planche 30s, 3x crunchs)",
+  "Mardi": "VR Danse + Snack Protéiné post session",
+  "Mercredi": "Gainage (3x planche 1min) + VR Equilibre (1 jambe, step)",
+  "Jeudi": "Repos + étirements",
+  "Vendredi": "VR Danse intense + Gainage rapide",
+  "Samedi": "Poirier contre mur + Pompes épaules (3x10)",
+  "Dimanche": "VR libre + Snack protéiné"
+};
+
 const poirierSteps = [
   "Headstand tenu facilement",
   "30 sec gainage solide",
@@ -17,7 +26,10 @@ export default function VRFitApp() {
     const saved = localStorage.getItem("boosterLog");
     return saved ? JSON.parse(saved) : {};
   });
-
+  const [activityLog, setActivityLog] = useState(() => {
+    const saved = localStorage.getItem("activityLog");
+    return saved ? JSON.parse(saved) : {};
+  });
   const [poirierProgress, setPoirierProgress] = useState(() => {
     const saved = localStorage.getItem("poirierProgress");
     return saved ? JSON.parse(saved) : [];
@@ -27,8 +39,8 @@ export default function VRFitApp() {
     const date = new Date();
     const day = days[date.getDay()];
     setToday(day);
-    const exercise = checklist[date.getDay() % checklist.length];
-    setTodayExercise(exercise);
+    setTodayExercise(routine[day]);
+    requestNotification();
   }, []);
 
   const toggleBooster = () => {
@@ -37,12 +49,31 @@ export default function VRFitApp() {
     localStorage.setItem("boosterLog", JSON.stringify(updated));
   };
 
+  const saveTodayActivity = () => {
+    const dateKey = new Date().toISOString().split("T")[0];
+    const updated = { ...activityLog, [dateKey]: todayExercise };
+    setActivityLog(updated);
+    localStorage.setItem("activityLog", JSON.stringify(updated));
+  };
+
   const togglePoirier = (step) => {
     const updated = poirierProgress.includes(step)
       ? poirierProgress.filter((s) => s !== step)
       : [...poirierProgress, step];
     setPoirierProgress(updated);
     localStorage.setItem("poirierProgress", JSON.stringify(updated));
+  };
+
+  const requestNotification = () => {
+    if (Notification.permission === "granted") {
+      new Notification("VR Fit - N'oublie pas ton entraînement du jour !");
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          new Notification("VR Fit - Rappel de ton programme fitness !");
+        }
+      });
+    }
   };
 
   return (
@@ -59,6 +90,7 @@ export default function VRFitApp() {
       <div style={{ marginBottom: 16, padding: 12, background: "#fff", borderRadius: 8 }}>
         <h2 style={{ fontSize: 20 }}>Exercice du jour ({today})</h2>
         <p style={{ fontSize: 18, fontWeight: "bold" }}>{todayExercise}</p>
+        <button onClick={saveTodayActivity}>Sauvegarder</button>
       </div>
 
       <div style={{ padding: 12, background: "#fff", borderRadius: 8 }}>
